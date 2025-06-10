@@ -1,0 +1,11 @@
+[package]
+name = "exoline"
+version = "2.0.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+tokio = { version = "1.42.0", features = ["full"] }
+num_enum = "0.7.3"
+oem_cp = "2.0.0"
+unicase = "2.8.1"

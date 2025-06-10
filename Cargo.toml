@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "exoline",
+    "exoline-test",
+]
+resolver = "2"
