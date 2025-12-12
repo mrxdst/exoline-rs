@@ -14,21 +14,18 @@ impl TcpIpSettings {
 
         for section in ini_file.sections() {
             if let Some(name) = section.name {
-                match name.to_ascii_lowercase().as_str() {
-                    "tcp/ip settings" => {
-                        for item in section.items() {
-                            match item.key.to_ascii_lowercase().as_str() {
-                                "requirepassword" => {
-                                    require_password = item.value.map(|s| s.to_ascii_lowercase()) == Some("yes".into());
-                                }
-                                "systempassword" => {
-                                    system_password = item.value.map(|s| s.into());
-                                }
-                                _ => {}
+                if name.to_ascii_lowercase().as_str() == "tcp/ip settings" {
+                    for item in section.items() {
+                        match item.key.to_ascii_lowercase().as_str() {
+                            "requirepassword" => {
+                                require_password = item.value.map(|s| s.to_ascii_lowercase()) == Some("yes".into());
                             }
+                            "systempassword" => {
+                                system_password = item.value.map(|s| s.into());
+                            }
+                            _ => {}
                         }
                     }
-                    _ => {}
                 }
             }
         }

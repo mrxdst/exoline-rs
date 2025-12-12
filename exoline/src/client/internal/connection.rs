@@ -85,7 +85,7 @@ impl Connection {
         let mut writer = self.writer.lock().await;
 
         writer.write_u8(BEGIN_REQUEST).await?;
-        writer.write(data).await?;
+        writer.write_all(data).await?;
         writer.write_u8(END_MESSAGE).await?;
         writer.flush().await?;
 

@@ -53,6 +53,6 @@ pub fn format_variant(value: &Variant) -> String {
         Variant::Integer(value) => format!("{value}"),
         Variant::Logic(value) => format!("{value}"),
         Variant::Real(value) => value.pretty(),
-        Variant::String(value) => format!("{value}"),
+        Variant::String(value) => value.to_string(),
     }
 }

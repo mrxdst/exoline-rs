@@ -15,6 +15,6 @@ pub fn parse_dpac_file(content: &str, mode: LoadMode, hash: u64) -> Result<FileI
     match header.name.to_ascii_lowercase().as_str() {
         "vpac" | "qpac" => parse_vpac_file(exo_file, mode, hash),
         "bpac" => parse_bpac_file(exo_file, mode, hash),
-        _ => return Err(ParseFileError::InvalidSyntax("Missing DPac header section".into())),
+        _ => Err(ParseFileError::InvalidSyntax("Missing DPac header section".into())),
     }
 }

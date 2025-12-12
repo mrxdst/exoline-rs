@@ -11,7 +11,7 @@ use tokio::{
 };
 use unicase::UniCase;
 
-use super::controller::Controller;
+use super::controller_impl::Controller;
 use super::internal::{
     exists_mod::ExistsMod,
     file_dpac::parse_dpac_file,
@@ -189,7 +189,7 @@ impl ControllerLoader {
             globals: globals.into(),
             address: (exists_mod.pla, exists_mod.ela),
             require_password: tcp_ip_settings.as_ref().map(|s| s.require_password).unwrap_or(false),
-            system_password: tcp_ip_settings.map(|s| s.system_password).flatten(),
+            system_password: tcp_ip_settings.and_then(|s| s.system_password),
         })
     }
 
@@ -201,7 +201,7 @@ impl ControllerLoader {
         let slib_dir = Arc::new(self.prod_dir.as_ref().map(|p| p.join("SLib")));
 
         for filename in Q_SYSTEM {
-            let path = match self.resolve_filename(&filename, &Path::new(""), None) {
+            let path = match self.resolve_filename(filename, Path::new(""), None) {
                 None => continue,
                 Some(path) => path,
             };
@@ -252,16 +252,14 @@ impl ControllerLoader {
             "al" | "alib" => self
                 .prod_dir
                 .as_ref()
-                .map(|prod_dir| path::absolute(prod_dir.join("ALib").join(part2)).ok())
-                .flatten(),
+                .and_then(|prod_dir| path::absolute(prod_dir.join("ALib").join(part2)).ok()),
             "sl" | "slib" => self
                 .prod_dir
                 .as_ref()
-                .map(|prod_dir| path::absolute(prod_dir.join("SLib").join(part2)).ok())
-                .flatten(),
+                .and_then(|prod_dir| path::absolute(prod_dir.join("SLib").join(part2)).ok()),
             "ml" | "mlib" => path::absolute(module_library_dir.unwrap_or(controller_dir).join(part2)).ok(),
             "proj" => path::absolute(controller_dir.join("..").join(part2)).ok(),
-            "prod" => self.prod_dir.as_ref().map(|prod_dir| path::absolute(prod_dir.join(part2)).ok()).flatten(),
+            "prod" => self.prod_dir.as_ref().and_then(|prod_dir| path::absolute(prod_dir.join(part2)).ok()),
             _ => Some(filename.into()),
         };
 
@@ -284,7 +282,7 @@ async fn load_file(cache: Cache, slib_dir: &Option<PathBuf>, kind: LoadFileKind,
         };
         let item = cell.get_or_init(|| async { load_file_inner(kind, path, mode).await }).await;
 
-        return item.as_ref().map(|v| v.clone());
+        item.as_ref().map(|v| v.clone())
     } else {
         return load_file_inner(kind, path, mode).await;
     }
@@ -301,5 +299,5 @@ async fn load_file_inner(kind: LoadFileKind, path: &Path, mode: LoadMode) -> Opt
         LoadFileKind::Text => parse_text_file(&content, mode, hash),
     }
     .ok()
-    .map(|v| Arc::new(v))
+    .map(Arc::new)
 }

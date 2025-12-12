@@ -38,14 +38,14 @@ impl<'a> Iterator for ExoFileSections<'a> {
                 continue;
             }
 
-            let section_name = if line.starts_with('{') { Some(line[1..].trim_ascii()) } else { None };
+            let section_name = line.strip_prefix("{").map(str::trim_ascii);
 
             self.line_nr += 1;
 
             match section_name {
                 Some(name) => {
                     return Some(ExoFileSection {
-                        name: name,
+                        name,
                         lines: self.lines.clone(),
                         line_nr: self.line_nr,
                     })
@@ -54,7 +54,7 @@ impl<'a> Iterator for ExoFileSections<'a> {
             }
         }
 
-        return None;
+        None
     }
 }
 
@@ -99,7 +99,7 @@ impl<'a> Iterator for ExoFileItems<'a> {
             return Some(ExoFileItem { line, comment });
         }
 
-        return None;
+        None
     }
 }
 

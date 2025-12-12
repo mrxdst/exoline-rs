@@ -45,7 +45,7 @@ impl LoadMdl {
 
                     match flag.to_ascii_uppercase().as_str() {
                         "MS" => global = true,
-                        "LN" => load_number = value.map(|v| v.parse().ok()).flatten(),
+                        "LN" => load_number = value.and_then(|v| v.parse().ok()),
                         _ => {}
                     }
                 }

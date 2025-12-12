@@ -109,12 +109,12 @@ impl EXOlineTCPClient {
 
     /// Reads a page from a DPac. Strings are not read.
     pub async fn read_dpac_page(&self, address: (u8, u8), file: &File, page: u8) -> Result<HashMap<Variable, Variant>, EXOlineError> {
-        Ok(self.read_dpac_internal(address, file, Some(page)).await?)
+        self.read_dpac_internal(address, file, Some(page)).await
     }
 
     /// Reads an entire DPac. Strings are not read.
     pub async fn read_dpac(&self, address: (u8, u8), file: &File) -> Result<HashMap<Variable, Variant>, EXOlineError> {
-        Ok(self.read_dpac_internal(address, file, None).await?)
+        self.read_dpac_internal(address, file, None).await
     }
 
     async fn read_dpac_internal(&self, address: (u8, u8), file: &File, only_page: Option<u8>) -> Result<HashMap<Variable, Variant>, EXOlineError> {
@@ -242,7 +242,7 @@ impl EXOlineTCPClient {
             }
         }
 
-        return Ok(data);
+        Ok(data)
     }
 
     /// Read a variable
@@ -372,7 +372,7 @@ impl EXOlineTCPClient {
                         Ok(Variant::Real(response.value))
                     }
                     VariableKind::String => {
-                        return Err(EXOlineError::InvalidArguments("Can't read a string from a BPac".into()));
+                        Err(EXOlineError::InvalidArguments("Can't read a string from a BPac".into()))
                     }
                 }
             }
@@ -388,7 +388,7 @@ impl EXOlineTCPClient {
                     Ok(Variant::String(response.value.to_string()))
                 }
                 _ => {
-                    return Err(EXOlineError::InvalidArguments("Can only read strings from text files".into()));
+                    Err(EXOlineError::InvalidArguments("Can only read strings from text files".into()))
                 }
             },
         }
@@ -645,7 +645,7 @@ impl EXOlineTCPClient {
                     Ok(())
                 }
                 VariableKind::String => {
-                    return Err(EXOlineError::InvalidArguments("Can't write a string to a BPac".into()));
+                    Err(EXOlineError::InvalidArguments("Can't write a string to a BPac".into()))
                 }
             },
             FileKind::Text => match variable_kind {
@@ -663,7 +663,7 @@ impl EXOlineTCPClient {
                     Ok(())
                 }
                 _ => {
-                    return Err(EXOlineError::InvalidArguments("Can only write strings to text files".into()));
+                    Err(EXOlineError::InvalidArguments("Can only write strings to text files".into()))
                 }
             },
         }
@@ -716,7 +716,7 @@ impl EXOlineTCPClient {
                 Ok(Variant::String(response.value.to_string()))
             }
             kind => {
-                return Err(EXOlineError::InvalidArguments(format!("Can't read a {:?} from a partition header", kind)));
+                Err(EXOlineError::InvalidArguments(format!("Can't read a {:?} from a partition header", kind)))
             }
         }
     }

@@ -24,16 +24,16 @@ impl Encodable for ReadPartAttrHeader {
         encoder.write_u8(self.kind.into());
         encoder.write_u8(self.part_no);
         encoder.write_u16(self.attr);
-        return Ok(());
+        Ok(())
     }
 }
 
 impl Decodable<Self> for ReadPartAttrHeader {
     fn decode(decoder: &mut Decoder) -> DecodeResult<Self> {
-        return Ok(Self {
+        Ok(Self {
             kind: decoder.read_u8()?.into(),
             part_no: decoder.read_u8()?,
             attr: decoder.read_u16()?,
-        });
+        })
     }
 }

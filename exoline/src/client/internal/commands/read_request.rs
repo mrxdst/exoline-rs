@@ -14,16 +14,16 @@ impl Encodable for ReadRequest {
         encoder.write_u8(self.kind.into());
         encoder.write_u8(self.load_number);
         encoder.write_u24(self.offset);
-        return Ok(());
+        Ok(())
     }
 }
 
 impl Decodable<Self> for ReadRequest {
     fn decode(decoder: &mut Decoder) -> DecodeResult<Self> {
-        return Ok(Self {
+        Ok(Self {
             kind: decoder.read_u8()?.into(),
             load_number: decoder.read_u8()?,
             offset: decoder.read_u24()?,
-        });
+        })
     }
 }

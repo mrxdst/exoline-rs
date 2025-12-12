@@ -8,12 +8,12 @@ pub struct ReadHugeResponse {
 impl Encodable for ReadHugeResponse {
     fn encode(&self, encoder: &mut Encoder) -> EncodeResult {
         encoder.write_i32(self.value);
-        return Ok(());
+        Ok(())
     }
 }
 
 impl Decodable<Self> for ReadHugeResponse {
     fn decode(decoder: &mut Decoder) -> DecodeResult<Self> {
-        return Ok(Self { value: decoder.read_i32()? });
+        Ok(Self { value: decoder.read_i32()? })
     }
 }

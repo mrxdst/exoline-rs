@@ -23,7 +23,7 @@ pub fn parse_bpac_file(exo_file: ExoFile, mode: LoadMode, hash: u64) -> Result<F
                     let (key, value) = split_once_and_trim_ascii(item.line, '=');
                     match key.to_ascii_lowercase().as_str() {
                         "name" => name = value.map(|s| s.into()),
-                        "ln" | "vln" => load_number = value.map(|s| s.parse().ok()).flatten(),
+                        "ln" | "vln" => load_number = value.and_then(|s| s.parse().ok()),
                         _ => {}
                     }
                 }
@@ -42,7 +42,7 @@ pub fn parse_bpac_file(exo_file: ExoFile, mode: LoadMode, hash: u64) -> Result<F
                         }
                         Some(ref columns) => columns,
                     };
-                    let _nr = item.line.split_once('#').map(|s| s.1.parse().ok()).flatten();
+                    let _nr = item.line.split_once('#').and_then(|s| s.1.parse().ok());
                     nr = u32::max(nr, _nr.unwrap_or(0));
                     while i < nr {
                         for (kind, name) in columns {
@@ -69,7 +69,7 @@ pub fn parse_bpac_file(exo_file: ExoFile, mode: LoadMode, hash: u64) -> Result<F
     })
 }
 
-fn parse_bpac_column_headers(line: &str) -> Result<Vec<(VariableKind, Cow<str>)>, ParseFileError> {
+fn parse_bpac_column_headers(line: &str) -> Result<Vec<(VariableKind, Cow<'_, str>)>, ParseFileError> {
     let line = line[line.find(':').map(|i| i + 1).unwrap_or(0)..line.len() - 1].trim_ascii();
     let columns: Result<Vec<_>, ParseFileError> = line
         .split(':')
@@ -79,9 +79,7 @@ fn parse_bpac_column_headers(line: &str) -> Result<Vec<(VariableKind, Cow<str>)>
             let (kind, name) = value
                 .split_at_checked(1)
                 .ok_or_else(|| ParseFileError::InvalidVariable("Invalid variable syntax".into()))?;
-            // let kind = VariableKind::parse_from_char(kind.chars().nth(0).unwrap())
-            //     .ok_or_else(|| ParseFileError::InvalidVariable("Invalid variable kind".into()))?;
-            let Some(kind) = VariableKind::parse_from_char(kind.chars().nth(0).unwrap()) else {
+            let Some(kind) = VariableKind::parse_from_char(kind.chars().next().unwrap()) else {
                 return Err(ParseFileError::InvalidVariable("Invalid variable kind".into()));
             };
             if kind == VariableKind::String {
@@ -94,7 +92,7 @@ fn parse_bpac_column_headers(line: &str) -> Result<Vec<(VariableKind, Cow<str>)>
             Ok((kind, name))
         })
         .collect();
-    Ok(columns?)
+    columns
 }
 
 fn add_bpac_variable(variables: &mut VariableMap, offset: &mut u32, kind: VariableKind, name: &str, comment: Option<&str>) {

@@ -33,11 +33,8 @@ impl File {
         let variable_key = UniCase::new(variable_name.into());
         match &self.file.variables {
             VariableMap::Verbose(_, variables) => {
-                let (variable_key, variable) = match variables.get_key_value(&variable_key) {
-                    None => return None,
-                    Some(value) => value,
-                };
-                return Some(Variable {
+                let (variable_key, variable) = variables.get_key_value(&variable_key)?;
+                Some(Variable {
                     file: self.file.clone(),
                     file_name: self.file_key.clone(),
                     kind: variable.kind(),
@@ -45,15 +42,12 @@ impl File {
                     comment: variable.comment(),
                     name: Some(variable_key.clone()),
                     load_number: self.load_number,
-                });
+                })
             }
             VariableMap::Standard(_, variables) => {
                 let hash = VariableMap::hash_key(&variable_key);
-                let variable = match variables.get(&hash) {
-                    None => return None,
-                    Some(variable) => variable,
-                };
-                return Some(Variable {
+                let variable = variables.get(&hash)?;
+                Some(Variable {
                     file: self.file.clone(),
                     file_name: self.file_key.clone(),
                     kind: variable.kind(),
@@ -61,7 +55,7 @@ impl File {
                     comment: variable.comment(),
                     name: None,
                     load_number: self.load_number,
-                });
+                })
             }
         }
     }
@@ -69,6 +63,11 @@ impl File {
     /// Returns the number of variables in the file.
     pub fn len(&self) -> usize {
         self.file.variables.len()
+    }
+
+    /// Returns `true` if the file contains no variables.
+    pub fn is_empty(&self) -> bool {
+        self.file.variables.is_empty()
     }
 
     /// Returns the name of the file.
@@ -97,7 +96,7 @@ impl File {
                 name: Some(variable_key.clone()),
                 load_number: self.load_number(),
             })),
-            VariableMap::Standard(_, variables) => Box::new(variables.iter().map(|(_, variable)| Variable {
+            VariableMap::Standard(_, variables) => Box::new(variables.values().map(|variable| Variable {
                 file: self.file.clone(),
                 file_name: self.file_key.clone(),
                 kind: variable.kind(),

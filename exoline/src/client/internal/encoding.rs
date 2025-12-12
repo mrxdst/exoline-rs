@@ -34,14 +34,14 @@ pub struct Encoder {
 
 impl Encoder {
     pub fn new() -> Self {
-        return Self {
+        Self {
             buffer: Vec::with_capacity(16),
-        };
+        }
     }
 
     #[allow(unused)]
     pub fn position(&self) -> usize {
-        return self.buffer.len();
+        self.buffer.len()
     }
 
     pub fn write_u8(&mut self, value: u8) {
@@ -85,11 +85,11 @@ impl Encoder {
     where
         T: Encodable + ?Sized,
     {
-        return value.encode(self);
+        value.encode(self)
     }
 
     pub fn finish(self) -> Vec<u8> {
-        return self.buffer;
+        self.buffer
     }
 
     pub fn encode<T>(value: &T) -> Result<Vec<u8>, EncodeError>
@@ -98,7 +98,7 @@ impl Encoder {
     {
         let mut encoder = Self::new();
         encoder.write_type(value)?;
-        return Ok(encoder.finish());
+        Ok(encoder.finish())
     }
 }
 
@@ -130,7 +130,7 @@ impl<'a> Decoder<'a> {
     pub fn new(buffer: &'a [u8]) -> Self {
         Self {
             buffer,
-            cursor: Cursor::new(&buffer),
+            cursor: Cursor::new(buffer),
         }
     }
 
@@ -140,7 +140,7 @@ impl<'a> Decoder<'a> {
     }
 
     pub fn remaining(&self) -> usize {
-        return self.buffer.len() - self.cursor.position() as usize;
+        self.buffer.len() - self.cursor.position() as usize
     }
 
     pub fn read_u8(&mut self) -> DecodeResult<u8> {
@@ -201,7 +201,7 @@ impl<'a> Decoder<'a> {
     where
         T: Decodable<T>,
     {
-        return T::decode(self);
+        T::decode(self)
     }
 
     pub fn decode<T>(buffer: &'a [u8]) -> DecodeResult<T>
@@ -210,7 +210,7 @@ impl<'a> Decoder<'a> {
     {
         let mut decoder = Self::new(buffer);
         let value: T = decoder.read_type()?;
-        return Ok(value);
+        Ok(value)
     }
 }
 
@@ -222,7 +222,7 @@ fn calc_crc(data: &[u8]) -> u8 {
     crc
 }
 
-pub fn escape(data: &[u8]) -> Cow<[u8]> {
+pub fn escape(data: &[u8]) -> Cow<'_, [u8]> {
     let mut i = 0;
     let mut do_escape = false;
 
@@ -258,18 +258,15 @@ pub fn escape(data: &[u8]) -> Cow<[u8]> {
     new_data.into()
 }
 
-pub fn unescape(data: &[u8]) -> Cow<[u8]> {
+pub fn unescape(data: &[u8]) -> Cow<'_, [u8]> {
     let mut i = 0;
     let mut do_unescape = false;
 
     while i < data.len() {
         let byte = data[i];
-        match byte {
-            ESCAPE_VALUE => {
-                do_unescape = true;
-                break;
-            }
-            _ => {}
+        if byte == ESCAPE_VALUE {
+            do_unescape = true;
+            break;
         }
         i += 1;
     }
@@ -324,7 +321,7 @@ mod tests {
         let mut encoder = Encoder::new();
         encoder.write_u8(0xAA);
         encoder.write_i16(0x7BCC);
-        encoder.write_bytes(&vec![1, 2, 3]);
+        encoder.write_bytes(&[1, 2, 3]);
         encoder.write_u24(0x12345678);
 
         assert_eq!(encoder.position(), 9);

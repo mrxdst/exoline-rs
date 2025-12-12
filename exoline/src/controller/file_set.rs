@@ -1,6 +1,6 @@
 use unicase::UniCase;
 
-use super::{controller::FileSetInternal, File};
+use super::{controller_impl::FileSetInternal, File};
 
 /// A collection of files.
 pub struct FileSet {
@@ -21,12 +21,17 @@ impl FileSet {
             }
         }
 
-        return None;
+        None
     }
 
     /// Returns the number of files in the collection.
     pub fn len(&self) -> usize {
         self.file_sets.iter().map(|f| f.len()).reduce(|acc, e| acc + e).unwrap_or_default()
+    }
+
+    /// Returns `true` if the collections contains no files.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// An iterator over all the files in the collection.

@@ -3,11 +3,11 @@
 //!
 //! Start with the [EXOlineTCPClient].
 
-mod client;
+mod client_impl;
 mod exoline_exception;
 mod internal;
 mod variant;
 
-pub use client::{EXOlineError, EXOlineTCPClient};
+pub use client_impl::{EXOlineError, EXOlineTCPClient};
 pub use exoline_exception::EXOlineException;
 pub use variant::Variant;

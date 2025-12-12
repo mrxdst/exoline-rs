@@ -31,12 +31,12 @@ impl Display for ParseFileError {
 
 impl Error for ParseFileError {}
 
-pub fn parse_variable_set_line<'a>(line: &'a str) -> Result<(VariableKind, &'a str, Option<u32>), ParseFileError> {
+pub fn parse_variable_set_line(line: &str) -> Result<(VariableKind, &str, Option<u32>), ParseFileError> {
     let (key, _) = split_once_and_trim_ascii(line, '=');
     let (kind, rest) = key
         .split_at_checked(1)
         .ok_or_else(|| ParseFileError::InvalidVariable("Invalid variable syntax".into()))?;
-    let Some(kind) = VariableKind::parse_from_char(kind.chars().nth(0).unwrap()) else {
+    let Some(kind) = VariableKind::parse_from_char(kind.chars().next().unwrap()) else {
         return Err(ParseFileError::InvalidVariable("Invalid variable kind".into()));
     };
     let (rest, _) = split_once_and_trim_ascii(rest, ':'); // Discard string length

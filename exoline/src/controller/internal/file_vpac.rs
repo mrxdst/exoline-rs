@@ -22,9 +22,9 @@ pub fn parse_vpac_file(exo_file: ExoFile, mode: LoadMode, hash: u64) -> Result<F
                     let (key, value) = split_once_and_trim_ascii(item.line, '=');
                     match key.to_ascii_lowercase().as_str() {
                         "name" => name = value.map(|s| s.into()),
-                        "ln" | "vln" => load_number = value.map(|s| s.parse().ok()).flatten(),
-                        "pages" => pages = value.map(|s| s.parse().ok()).flatten().unwrap_or(1),
-                        "alignwithsegments" => align_with_segments = value.map(|v| v.to_ascii_lowercase() == "yes").unwrap_or(true),
+                        "ln" | "vln" => load_number = value.and_then(|s| s.parse().ok()),
+                        "pages" => pages = value.and_then(|s| s.parse().ok()).unwrap_or(1),
+                        "alignwithsegments" => align_with_segments = value.map(|v| v.eq_ignore_ascii_case("yes")).unwrap_or(true),
                         _ => {}
                     }
                 }
@@ -60,6 +60,7 @@ pub fn parse_vpac_file(exo_file: ExoFile, mode: LoadMode, hash: u64) -> Result<F
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_vpac_variable(
     variables: &mut VariableMap,
     offset: &mut u32,

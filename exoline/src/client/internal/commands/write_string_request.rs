@@ -18,17 +18,17 @@ impl<'a> Encodable for WriteStringRequest<'a> {
         encoder.write_u8(self.load_number);
         encoder.write_u24(self.offset);
         encoder.write_string(&self.value)?;
-        return Ok(());
+        Ok(())
     }
 }
 
 impl<'a> Decodable<Self> for WriteStringRequest<'a> {
     fn decode(decoder: &mut Decoder) -> DecodeResult<Self> {
-        return Ok(Self {
+        Ok(Self {
             kind: decoder.read_u8()?.into(),
             load_number: decoder.read_u8()?,
             offset: decoder.read_u24()?,
             value: decoder.read_string()?.into(),
-        });
+        })
     }
 }

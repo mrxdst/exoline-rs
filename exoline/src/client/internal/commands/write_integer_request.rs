@@ -16,17 +16,17 @@ impl Encodable for WriteIntegerRequest {
         encoder.write_u8(self.load_number);
         encoder.write_u24(self.offset);
         encoder.write_i16(self.value);
-        return Ok(());
+        Ok(())
     }
 }
 
 impl Decodable<Self> for WriteIntegerRequest {
     fn decode(decoder: &mut Decoder) -> DecodeResult<Self> {
-        return Ok(Self {
+        Ok(Self {
             kind: decoder.read_u8()?.into(),
             load_number: decoder.read_u8()?,
             offset: decoder.read_u24()?,
             value: decoder.read_i16()?,
-        });
+        })
     }
 }

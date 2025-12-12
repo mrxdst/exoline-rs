@@ -120,6 +120,6 @@ impl PartialEq for Controller {
             }
         }
 
-        return true;
+        true
     }
 }

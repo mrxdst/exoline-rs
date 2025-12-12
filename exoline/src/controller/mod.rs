@@ -3,14 +3,14 @@
 //!
 //! Start with the [ControllerLoader].
 
-mod controller;
+mod controller_impl;
 mod controller_loader;
 mod file;
 mod file_set;
 mod internal;
 mod variable;
 
-pub use controller::Controller;
+pub use controller_impl::Controller;
 pub use controller_loader::{ControllerLoader, LoadMode};
 pub use file::{File, FileKind};
 pub use file_set::FileSet;

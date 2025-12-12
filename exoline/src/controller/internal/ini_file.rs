@@ -46,7 +46,7 @@ impl<'a> Iterator for IniFileSections<'a> {
                 None
             };
 
-            if section_name == None && self.initial {
+            if section_name.is_none() && self.initial {
                 self.initial = false;
                 return Some(IniFileSection {
                     name: section_name,
@@ -70,7 +70,7 @@ impl<'a> Iterator for IniFileSections<'a> {
             }
         }
 
-        return None;
+        None
     }
 }
 
@@ -117,7 +117,7 @@ impl<'a> Iterator for IniFileItems<'a> {
             return Some(IniFileItem { key, value, comment });
         }
 
-        return None;
+        None
     }
 }
 

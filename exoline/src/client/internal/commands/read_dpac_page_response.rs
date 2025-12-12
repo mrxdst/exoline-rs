@@ -10,14 +10,14 @@ pub struct ReadDPacPageResponse<'a> {
 impl<'a> Encodable for ReadDPacPageResponse<'a> {
     fn encode(&self, encoder: &mut Encoder) -> EncodeResult {
         encoder.write_bytes(&self.data);
-        return Ok(());
+        Ok(())
     }
 }
 
 impl<'a> Decodable<Self> for ReadDPacPageResponse<'a> {
     fn decode(decoder: &mut Decoder) -> DecodeResult<Self> {
-        return Ok(Self {
+        Ok(Self {
             data: decoder.read_bytes(decoder.remaining())?.into(),
-        });
+        })
     }
 }

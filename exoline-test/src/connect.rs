@@ -306,7 +306,7 @@ impl ClientImpl {
                 for variable in variables {
                     let value_text = match values.get(&variable) {
                         None => "",
-                        Some(value) => &format_variant(&value),
+                        Some(value) => &format_variant(value),
                     };
                     table.add_row([
                         variable.full_name().unwrap().as_str(),
@@ -375,19 +375,19 @@ impl ClientImpl {
         writer.write_record(["Variable", "Type", "Value", "Comment"])?;
 
         let mut files = self.controller.files().iter().collect::<Vec<_>>();
-        files.sort_by(|a, b| a.load_number().cmp(&b.load_number()));
+        files.sort_by_key(|a| a.load_number());
 
         let mut count = 0;
 
         for file in files.iter() {
             let mut variables = file.iter().collect::<Vec<_>>();
-            variables.sort_by(|a, b| a.offset().cmp(&b.offset()));
+            variables.sort_by_key(|a| a.offset());
 
             for variable in variables.iter() {
                 count += 1;
                 let value_text = match values.get(variable) {
                     None => "",
-                    Some(value) => &format_variant(&value),
+                    Some(value) => &format_variant(value),
                 };
                 writer.write_record([
                     variable.full_name().unwrap().as_str(),
@@ -515,8 +515,9 @@ impl Completer for InteractiveHelper {
             None
         };
 
-        // only for break
-        while let Some(prefix) = prefix {
+        let mut add_matches = || {
+            let Some(prefix) = prefix else { return; };
+            
             let line = line.to_lowercase();
             if !line.contains('.') {
                 for file in self.controller.files().iter() {
@@ -529,11 +530,11 @@ impl Completer for InteractiveHelper {
                 let (file, _) = line.split_once('.').unwrap();
                 let parts = file.split_whitespace().collect::<Vec<_>>();
                 if parts.len() != 2 {
-                    break;
+                    return;
                 }
                 let filename = parts[1];
                 let file = match self.controller.files().get(filename) {
-                    None => break,
+                    None => return,
                     Some(file) => file,
                 };
                 for variable in file.iter() {
@@ -543,9 +544,9 @@ impl Completer for InteractiveHelper {
                     }
                 }
             }
+        };
 
-            break;
-        }
+        add_matches();
 
         matches.sort();
 

@@ -142,6 +142,6 @@ fn parse_duration(input: &str) -> Result<Duration, ParseIntError> {
 fn parse_pla_ela(input: &str) -> Result<(u8, u8), Box<dyn std::error::Error + Send + Sync>> {
     match input.split_once(':') {
         Some((pla, ela)) => Ok((pla.parse()?, ela.parse()?)),
-        None => return Err("Invalid format".to_string().into()),
+        None => Err("Invalid format".to_string().into()),
     }
 }

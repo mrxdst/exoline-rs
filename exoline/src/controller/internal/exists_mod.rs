@@ -23,31 +23,25 @@ impl ExistsMod {
         for section in ini_file.sections() {
             match section.name {
                 None => {
-                    let mut i = 0;
-                    for item in section.items() {
+                    for (i, item) in section.items().enumerate() {
                         match i {
                             0 => name = item.key.into(),
                             1 => {
                                 let (pla_str, ela_str) = split_once_and_trim_ascii(item.key, '\t');
                                 pla = pla_str.parse().unwrap_or(0);
-                                ela = ela_str.map(|s| s.parse().ok()).flatten().unwrap_or(0);
+                                ela = ela_str.and_then(|s| s.parse().ok()).unwrap_or(0);
                             }
                             2 => description = Some(item.key.into()),
                             _ => {}
                         }
-                        i += 1;
                     }
                 }
-                Some(name) => match name.to_ascii_lowercase().as_str() {
-                    "module" => {
-                        for item in section.items() {
-                            match item.key.to_ascii_lowercase().as_str() {
-                                "modulelibrary" => module_library = item.value.map(|s| s.into()),
-                                _ => {}
-                            }
+                Some(name) => if name.to_ascii_lowercase().as_str() == "module" {
+                    for item in section.items() {
+                        if item.key.to_ascii_lowercase().as_str() == "modulelibrary" {
+                            module_library = item.value.map(|s| s.into())
                         }
                     }
-                    _ => {}
                 },
             }
         }

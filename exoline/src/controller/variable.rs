@@ -54,10 +54,7 @@ impl Variable {
     /// The fully qualified name for the variable in the controller.
     /// Only present when controller was loaded with [LoadMode::WithNames](crate::controller::LoadMode::WithNames).
     pub fn full_name(&self) -> Option<UniCase<String>> {
-        match &self.name {
-            None => None,
-            Some(name) => Some(UniCase::new(format!("{}.{}", self.file_name, name))),
-        }
+        self.name.as_ref().map(|name| UniCase::new(format!("{}.{}", self.file_name, name)))
     }
 
     /// Only present when controller was loaded with [LoadMode::WithNames](crate::controller::LoadMode::WithNamesAndComments) and the variable has a comment.

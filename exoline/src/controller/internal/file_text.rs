@@ -20,9 +20,8 @@ pub fn parse_text_file(content: &str, mode: LoadMode, hash: u64) -> Result<FileI
             "text" => {
                 for item in section.items() {
                     let (key, value) = split_once_and_trim_ascii(item.line, '=');
-                    match key.to_ascii_lowercase().as_str() {
-                        "name" => name = value.map(|s| s.into()),
-                        _ => {}
+                    if key.to_ascii_lowercase().as_str() == "name" {
+                        name = value.map(|s| s.into())
                     }
                 }
             }

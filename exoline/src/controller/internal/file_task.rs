@@ -24,15 +24,14 @@ pub fn parse_task_file(content: &str, mode: LoadMode, hash: u64) -> Result<FileI
                         "name" => name = value.map(|s| s.into()),
                         "ln" | "tln" => {
                             load_number = value
-                                .map(|s| {
-                                    let s = s.split_ascii_whitespace().nth(0).unwrap_or_default();
+                                .and_then(|s| {
+                                    let s = s.split_ascii_whitespace().next().unwrap_or_default();
                                     if s.eq_ignore_ascii_case("proc") {
                                         Some(0xFF)
                                     } else {
                                         s.parse().ok()
                                     }
                                 })
-                                .flatten()
                         }
                         _ => {}
                     }
