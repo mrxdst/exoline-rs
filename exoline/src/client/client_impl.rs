@@ -19,9 +19,11 @@ pub enum EXOlineError {
     IO(Arc<std::io::Error>),
     /// Some arguments provided to the function are invalid or out of range.
     /// The request was never sent to the server.
-    InvalidArguments(String),
+    InvalidArguments(&'static str),
+    /// Internal error.
+    Internal(&'static str),
     /// Indicates that the response received from the server is not a valid response.
-    InvalidResponse(String),
+    InvalidResponse(&'static str),
     /// Exception code reported by the server.
     ExolineException(EXOlineException),
 }
@@ -31,6 +33,7 @@ impl Display for EXOlineError {
         match self {
             Self::IO(err) => write!(f, "{err}"),
             Self::InvalidArguments(err) => write!(f, "Argument out of range: {err}"),
+            Self::Internal(err) => write!(f, "Internal error: {err}"),
             Self::InvalidResponse(err) => write!(f, "Invalid response: {err}"),
             Self::ExolineException(ex) => write!(f, "{ex:?}"),
         }
@@ -41,7 +44,7 @@ impl Error for EXOlineError {}
 
 impl From<DecodeError> for EXOlineError {
     fn from(_: DecodeError) -> Self {
-        EXOlineError::InvalidResponse("Error when decoding response".into())
+        EXOlineError::InvalidResponse("Error when decoding response")
     }
 }
 
@@ -79,7 +82,7 @@ impl EXOlineTCPClient {
                 Err(error) => {
                     let error = match error {
                         ReadError::IO(error) => EXOlineError::IO(error.into()),
-                        ReadError::InvalidData => EXOlineError::InvalidResponse("The server sent invalid data".into()),
+                        ReadError::InvalidData => EXOlineError::InvalidResponse("The server sent invalid data"),
                     };
                     let mut response_queue = response_queue.lock().await;
                     while let Some(sender) = response_queue.pop_front() {
@@ -91,7 +94,7 @@ impl EXOlineTCPClient {
 
             let sender = response_queue.lock().await.pop_front();
             match sender {
-                None => return Err(EXOlineError::InvalidResponse("The server sent an unexpected response".into())),
+                None => return Err(EXOlineError::InvalidResponse("The server sent an unexpected response")),
                 Some(sender) => _ = sender.send(Ok(msg)),
             }
         }
@@ -120,7 +123,7 @@ impl EXOlineTCPClient {
     async fn read_dpac_internal(&self, address: (u8, u8), file: &File, only_page: Option<u8>) -> Result<HashMap<Variable, Variant>, EXOlineError> {
         match file.kind() {
             FileKind::BPac | FileKind::VPac => {}
-            _ => return Err(EXOlineError::InvalidArguments("Can only read pages from DPac's".into())),
+            _ => return Err(EXOlineError::InvalidArguments("Can only read pages from DPac's")),
         }
 
         let mut result = HashMap::with_capacity(only_page.map(|_| 60).unwrap_or_else(|| file.len()));
@@ -220,7 +223,7 @@ impl EXOlineTCPClient {
         match file_kind {
             FileKind::BPac | FileKind::VPac => {}
             _ => {
-                return Err(EXOlineError::InvalidArguments("Can only read pages from DPac's".into()));
+                return Err(EXOlineError::InvalidArguments("Can only read pages from DPac's"));
             }
         }
         let response_data = self
@@ -372,7 +375,7 @@ impl EXOlineTCPClient {
                         Ok(Variant::Real(response.value))
                     }
                     VariableKind::String => {
-                        Err(EXOlineError::InvalidArguments("Can't read a string from a BPac".into()))
+                        Err(EXOlineError::InvalidArguments("Can't read a string from a BPac"))
                     }
                 }
             }
@@ -388,7 +391,7 @@ impl EXOlineTCPClient {
                     Ok(Variant::String(response.value.to_string()))
                 }
                 _ => {
-                    Err(EXOlineError::InvalidArguments("Can only read strings from text files".into()))
+                    Err(EXOlineError::InvalidArguments("Can only read strings from text files"))
                 }
             },
         }
@@ -421,7 +424,7 @@ impl EXOlineTCPClient {
             FileKind::Task => match variable_kind {
                 VariableKind::Huge => {
                     let Some(value) = value.huge() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteHugeRequest {
                         kind: CommandFileKind::Task,
@@ -434,7 +437,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Index => {
                     let Some(value) = value.index() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteIndexRequest {
                         kind: CommandFileKind::Task,
@@ -447,7 +450,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Integer => {
                     let Some(value) = value.integer() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteIntegerRequest {
                         kind: CommandFileKind::Task,
@@ -460,7 +463,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Logic => {
                     let Some(value) = value.logic() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteLogicRequest {
                         kind: CommandFileKind::Task,
@@ -473,7 +476,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Real => {
                     let Some(value) = value.real() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteRealRequest {
                         kind: CommandFileKind::Task,
@@ -486,7 +489,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::String => {
                     let Some(value) = value.string() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteStringRequest {
                         kind: CommandFileKind::Task,
@@ -501,7 +504,7 @@ impl EXOlineTCPClient {
             FileKind::VPac => match variable_kind {
                 VariableKind::Huge => {
                     let Some(value) = value.huge() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteHugeRequest {
                         kind: CommandFileKind::VPac,
@@ -514,7 +517,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Index => {
                     let Some(value) = value.index() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteIndexRequest {
                         kind: CommandFileKind::VPac,
@@ -527,7 +530,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Integer => {
                     let Some(value) = value.integer() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteIntegerRequest {
                         kind: CommandFileKind::VPac,
@@ -540,7 +543,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Logic => {
                     let Some(value) = value.logic() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteLogicRequest {
                         kind: CommandFileKind::VPac,
@@ -553,7 +556,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Real => {
                     let Some(value) = value.real() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteRealRequest {
                         kind: CommandFileKind::VPac,
@@ -566,7 +569,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::String => {
                     let Some(value) = value.string() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteStringRequest {
                         kind: CommandFileKind::VPac,
@@ -581,7 +584,7 @@ impl EXOlineTCPClient {
             FileKind::BPac => match variable_kind {
                 VariableKind::Huge => {
                     let Some(value) = value.huge() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteHugeRequest {
                         kind: CommandFileKind::BPac,
@@ -594,7 +597,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Index => {
                     let Some(value) = value.index() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteIndexRequest {
                         kind: CommandFileKind::BPac,
@@ -607,7 +610,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Integer => {
                     let Some(value) = value.integer() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteIntegerRequest {
                         kind: CommandFileKind::BPac,
@@ -620,7 +623,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Logic => {
                     let Some(value) = value.logic() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteLogicRequest {
                         kind: CommandFileKind::BPac,
@@ -633,7 +636,7 @@ impl EXOlineTCPClient {
                 }
                 VariableKind::Real => {
                     let Some(value) = value.real() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteRealRequest {
                         kind: CommandFileKind::BPac,
@@ -645,13 +648,13 @@ impl EXOlineTCPClient {
                     Ok(())
                 }
                 VariableKind::String => {
-                    Err(EXOlineError::InvalidArguments("Can't write a string to a BPac".into()))
+                    Err(EXOlineError::InvalidArguments("Can't write a string to a BPac"))
                 }
             },
             FileKind::Text => match variable_kind {
                 VariableKind::String => {
                     let Some(value) = value.string() else {
-                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match".into()));
+                        return Err(EXOlineError::InvalidArguments("The variable and value kind doesn't match"));
                     };
                     let request = WriteStringRequest {
                         kind: CommandFileKind::VPac,
@@ -663,7 +666,7 @@ impl EXOlineTCPClient {
                     Ok(())
                 }
                 _ => {
-                    Err(EXOlineError::InvalidArguments("Can only write strings to text files".into()))
+                    Err(EXOlineError::InvalidArguments("Can only write strings to text files"))
                 }
             },
         }
@@ -715,8 +718,8 @@ impl EXOlineTCPClient {
                 let response = ReadStringResponse::decode_from_bytes(&response_data)?;
                 Ok(Variant::String(response.value.to_string()))
             }
-            kind => {
-                Err(EXOlineError::InvalidArguments(format!("Can't read a {:?} from a partition header", kind)))
+            _ => {
+                Err(EXOlineError::InvalidArguments("Attribute kind is not valid for a partition header"))
             }
         }
     }
@@ -731,7 +734,7 @@ impl EXOlineTCPClient {
         encoder.write_u8(command_id.into());
         encoder
             .write_type(request)
-            .map_err(|_| EXOlineError::InvalidArguments("Error encoding message".into()))?;
+            .map_err(|_| EXOlineError::InvalidArguments("Error encoding message"))?;
 
         let mut request_data = encoder.finish();
         append_crc(&mut request_data);
@@ -749,9 +752,10 @@ impl EXOlineTCPClient {
             Err(e) => return Err(EXOlineError::IO(e.into())),
         }
 
-        let response_data = match receiver.await.unwrap() {
-            Ok(data) => data,
-            Err(error) => return Err(error),
+        let response_data = match receiver.await {
+            Ok(Ok(data)) => data,
+            Ok(Err(error)) => return Err(error),
+            Err(_err) => unreachable!(),
         };
 
         if response_data.len() == 1 {
@@ -759,7 +763,7 @@ impl EXOlineTCPClient {
         }
 
         let response_data = unescape(&response_data);
-        let response_data = verify_and_remove_crc(&response_data).ok_or_else(|| EXOlineError::InvalidResponse("CRC mismatch".into()))?;
+        let response_data = verify_and_remove_crc(&response_data).ok_or(EXOlineError::InvalidResponse("CRC mismatch"))?;
 
         Ok(response_data.into())
     }
