@@ -4,10 +4,13 @@ use std::{
     num::TryFromIntError,
 };
 
+use thiserror::Error;
+
 use super::consts::*;
 
-#[derive(PartialEq, Debug)]
+#[derive(Error, PartialEq, Debug)]
 pub enum EncodeError {
+    #[error("Overflow")]
     Overflow,
 }
 
@@ -102,8 +105,9 @@ impl Encoder {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Error, PartialEq, Debug)]
 pub enum DecodeError {
+    #[error("Missing data")]
     MissingData,
 }
 
@@ -180,7 +184,7 @@ impl<'a> Decoder<'a> {
     pub fn read_string(&mut self) -> DecodeResult<String> {
         let len = usize::min(self.remaining(), 127);
         let bytes = self.read_bytes(len)?;
-        let text = oem_cp::decode_string_complete_table(bytes, &oem_cp::code_table::DECODING_TABLE_CP850);
+        let text = oem_cp::decode_string_complete_table(&bytes, &oem_cp::code_table::DECODING_TABLE_CP850);
         Ok(text)
     }
 

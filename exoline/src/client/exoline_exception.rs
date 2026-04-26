@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fmt::Display;
+
 use num_enum::{FromPrimitive, IntoPrimitive};
 
 /// Error codes returned from the device.
@@ -49,3 +52,11 @@ impl PartialEq for EXOlineException {
         u8::from(*self) == u8::from(*other)
     }
 }
+
+impl Display for EXOlineException {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for EXOlineException {}

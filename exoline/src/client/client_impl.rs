@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::{collections::VecDeque, error::Error, fmt::Display, sync::Arc};
+use std::{collections::VecDeque, sync::Arc};
 
+use thiserror::Error;
 use tokio::{net::TcpStream, task::AbortHandle};
 use tokio::{
     sync::{oneshot, Mutex},
@@ -13,34 +14,29 @@ use super::internal::{command_id::CommandId, commands::*, connection::*, encodin
 use super::{exoline_exception::EXOlineException, variant::Variant};
 
 /// Errors returned by the [`EXOlineTCPClient`].
-#[derive(Debug, Clone)]
+#[derive(Error, Debug, Clone)]
 pub enum EXOlineError {
     /// Represent an IO error.
+    #[error(transparent)]
     IO(Arc<std::io::Error>),
+
     /// Some arguments provided to the function are invalid or out of range.
     /// The request was never sent to the server.
+    #[error("Invalid arguments: {0}")]
     InvalidArguments(&'static str),
+
     /// Internal error.
+    #[error("Internal error: {0}")]
     Internal(&'static str),
+
     /// Indicates that the response received from the server is not a valid response.
+    #[error("Invalid response: {0}")]
     InvalidResponse(&'static str),
+
     /// Exception code reported by the server.
+    #[error(transparent)]
     ExolineException(EXOlineException),
 }
-
-impl Display for EXOlineError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::IO(err) => write!(f, "{err}"),
-            Self::InvalidArguments(err) => write!(f, "Argument out of range: {err}"),
-            Self::Internal(err) => write!(f, "Internal error: {err}"),
-            Self::InvalidResponse(err) => write!(f, "Invalid response: {err}"),
-            Self::ExolineException(ex) => write!(f, "{ex:?}"),
-        }
-    }
-}
-
-impl Error for EXOlineError {}
 
 impl From<DecodeError> for EXOlineError {
     fn from(_: DecodeError) -> Self {
